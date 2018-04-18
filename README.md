@@ -11,13 +11,15 @@
 
 
 
-# Install Clickhouse
+# Install ClickHouse
 ClickHouse installation is explained in several sources, such as:
  * for [deb-based systems](https://clickhouse.yandex/docs/en/getting_started/#installing-from-packages-debianubuntu)
  * for [rpm-based systems](https://github.com/Altinity/clickhouse-rpm-install)
 
 
-reate rollup config /etc/clickhouse-server/conf.d/graphite_rollup.xml. Pay attention to graphite_rollup tag name. The name is used below.
+Create rollup config file `/etc/clickhouse-server/conf.d/graphite_rollup.xml`.
+Settings for thinning data for Graphite.
+
 
 <yandex>
 <graphite_rollup>
@@ -168,6 +170,25 @@ CREATE TABLE graphite.metrics ( date Date DEFAULT toDate(0),  name String,  leve
 
 CREATE TABLE graphite.data ( metric String,  value Float64,  timestamp UInt32,  date Date,  updated UInt32) ENGINE = GraphiteMergeTree(date, (metric, timestamp), 8192, 'graphite_rollup');
 
+i
+
+This engine is designed for rollup (thinning and aggregating/averaging) Graphite data. It may be helpful to developers who want to use ClickHouse as a data store for Graphite.
+
+Graphite stores full data in ClickHouse, and data can be retrieved in the following ways:
+
+    Without thinning.
+
+Uses the MergeTree engine.
+
+    With thinning.
+
+Using the GraphiteMergeTree engine.
+
+The engine inherits properties from MergeTree. The settings for thinning data are defined by the graphite_rollup parameter in the server configuration.
+
+
+
+More details: https://clickhouse.yandex/docs/en/table_engines/graphitemergetree/#table_engines-graphitemergetree
 
 
 Graphouse
