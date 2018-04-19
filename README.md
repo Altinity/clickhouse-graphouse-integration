@@ -20,6 +20,10 @@ ClickHouse installation is explained in several sources, such as:
 Create rollup config file `/etc/clickhouse-server/conf.d/graphite_rollup.xml`.
 Settings for thinning data for Graphite.
 
+```bash
+sudo mkdir -p /etc/clickhouse-server/conf.d
+```
+`graphite_rollup.xml` can be get [here](conf/graphite_rollup.xml?raw=true)
 ```xml
 <yandex>
 <graphite_rollup>
