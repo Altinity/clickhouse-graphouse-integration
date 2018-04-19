@@ -294,6 +294,60 @@ Start graphouse
 sudo /etc/init.d/graphouse start
 ```
 
+# Setup ClickHouse to report metrics into Graphouse.
+
+This will provide ClickHouse's self-monitoring, to some extent - ClickHouse will report own metrics, which will be kept back in ClickHouse via Graphouse.
+
+Edit `/etc/clickhouse-server/config.xml` and append something like the following:
+```xml
+    <graphite>
+        <host>127.0.0.1</host>
+        <port>2003</port>
+        <timeout>0.1</timeout>
+        <interval>60</interval>
+        <root_path>one_min_cr_plain</root_path>
+
+        <metrics>true</metrics>
+        <events>true</events>
+        <asynchronous_metrics>true</asynchronous_metrics>
+    </graphite>
+    <graphite>
+        <host>127.0.0.1</host>
+        <port>2003</port>
+        <timeout>0.1</timeout>
+        <interval>1</interval>
+        <root_path>one_sec_cr_plain</root_path>
+
+        <metrics>true</metrics>
+        <events>true</events>
+        <asynchronous_metrics>false</asynchronous_metrics>
+    </graphite>
+```
+Settings description:
+
+* `host` – host where Graphite is running.
+* `port` – plain text receiver port (2003 is default).
+* `interval` – interval for sending data from ClickHouse, in seconds.
+* `timeout` – timeout for sending data, in seconds.
+* `root_path` – prefix used by Graphite.
+* `metrics` – should data from system_tables-system.metrics table be sent.
+* `events` – should data from system_tables-system.events table be sent.
+* `asynchronous_metrics` – should data from system_tables-system.asynchronous_metrics table be sent.
+
+Multiple `<graphite>` clauses can be configured for sending different data at different intervals.
+
+Restart ClickHouse
+```bash
+sudo /etc/init.d/clickhouse-server restart
+```
+
+Now ClickHouse would report metrics to Graphouse, and they will be stored back insode ClickHouse.
+So, we can check metrics data coming:
+
+```bash
+ clickhouse-client -q "select count(*) from graphite.data"
+ clickhouse-client -q "select count(*) from graphite.metrics"
+```
 
 # Install Graphite-web
 
@@ -307,7 +361,6 @@ sudo apt install -y python3-dev libcairo2-dev libffi-dev build-essential
 export PYTHONPATH="/opt/graphite/lib/:/opt/graphite/webapp/"
 sudo pip3 install --no-binary=:all: https://github.com/graphite-project/graphite-web/tarball/master
 
-
 sudo apt install -y gunicorn3
 sudo apt install -y nginx
 
@@ -316,10 +369,28 @@ sudo touch /var/log/nginx/graphite.error.log
 sudo chmod 640 /var/log/nginx/graphite.*
 sudo chown www-data:www-data /var/log/nginx/graphite.*
 ```
+
 Setup host name in nginx config
 ```bash
 sudo vim /etc/nginx/sites-available/graphite
 ```
+
+## Setup connection to Graphouse
+
+Add graphouse plugin `/opt/graphouse/bin/graphouse.py `to your graphite webapp root dir. For example, if you dir is `/opt/graphite/webapp/graphite/` use:
+```bash
+sudo ln -fs /opt/graphouse/bin/graphouse.py /opt/graphite/webapp/graphite/graphouse.py
+```
+
+Configure storage finder in your `/opt/graphite/webapp/graphite/local_settings.py`
+Open `/opt/graphite/webapp/graphite/local_settings.py` in editor and add:
+
+```python
+STORAGE_FINDERS = (
+    'graphite.graphouse.GraphouseFinder',
+)
+```
+
 Start Graphite-web
 ```bash
 cd /opt/graphite/conf
@@ -327,28 +398,5 @@ cp graphite.wsgi.example graphite.wsgi
 gunicorn3 --bind=127.0.0.1:8080 graphite.wsgi:application
 ```
 
-http://192.168.74.149/
-
-
-## Setup connection to Graphouse
-
-
-
-Add graphouse plugin `/opt/graphouse/bin/graphouse.py `to your graphite webapp root dir. For example, if you dir is `/opt/graphite/webapp/graphite/` use:
-```bash
-sudo ln -fs /opt/graphouse/bin/graphouse.py /opt/graphite/webapp/graphite/graphouse.py
-bash
-
-Configure storage finder in your `local_settings.py`
-```bash
-vim /opt/graphite/webapp/graphite/local_settings.py
-```
-```python
-STORAGE_FINDERS = (
-    'graphite.graphouse.GraphouseFinder',
-)
-```
-
-Restart graphite-web
-
-
+Point your browser to the host, where Graphite-web is running:
+![Graphite screenshot](images/graphite_webi_graphouse.png?raw=true "Graphite screenshot"
