@@ -2,20 +2,27 @@
 
 # Table of Contents
 
- * [Introduction](#introduction---what-are-we-talking-about)
+ * [Introduction](#introduction)
  * [Install ClickHouse](#install-clickhouse)
+  * [Configure ClickHouse](#configure-clickhouse)
+  * [Create ClickHouse tables](#create-clickhouse-tables)
  * [Install Graphouse](#install-graphouse)
+ * [Setup ClickHouse to report metrics into Graphouse](#setup-clickhouse-to-report-metrics-into-graphouse)
  * [Install Graphite-web](#install-graphite-web)
- * [Setup ClickHouse - Graphouse integration](#setup-clickhouse---graphouse-integration)
  * [Monitoring](#monitoring)
 
+# Introduction
 
+What are we talking about.
+[Graphouse](https://github.com/yandex/graphouse/) allows you to use [ClickHouse](https://clickhouse.yandex/) as a [Graphite](http://graphite.readthedocs.io/en/latest/overview.html) storage.
 
 # Install ClickHouse
 ClickHouse installation is explained in several sources, such as:
  * for [deb-based systems](https://clickhouse.yandex/docs/en/getting_started/#installing-from-packages-debianubuntu)
  * for [rpm-based systems](https://github.com/Altinity/clickhouse-rpm-install)
 
+
+## Configure ClickHouse
 
 Create rollup config file `/etc/clickhouse-server/conf.d/graphite_rollup.xml`.
 Settings for thinning data for Graphite.
@@ -166,7 +173,8 @@ sudo mkdir -p /etc/clickhouse-server/conf.d
 </yandex>
 ```
 
-## Create tables
+## Create ClickHouse tables
+
 Restart ClickHouse, run `clickhouse-client` and create tables. SQL file is available [here](conf/create_tables.sql?raw=true)
 
 ```bash
@@ -296,7 +304,7 @@ Start graphouse
 sudo /etc/init.d/graphouse start
 ```
 
-# Setup ClickHouse to report metrics into Graphouse.
+# Setup ClickHouse to report metrics into Graphouse
 
 This will provide ClickHouse's self-monitoring, to some extent - ClickHouse will report own metrics, which will be kept back in ClickHouse via Graphouse.
 
@@ -377,7 +385,7 @@ sudo chmod 640 /var/log/nginx/graphite.*
 sudo chown www-data:www-data /var/log/nginx/graphite.*
 ```
 Create `/etc/nginx/sites-available/graphite` ngix config file with the following content:
-Write the following configuration in /etc/nginx/sites-available/graphite:
+Write the following configuration in `/etc/nginx/sites-available/graphite` (availabe as a [file](conf/nginx_graphite?raw=true))
 ```ini
 
 upstream graphite {
@@ -481,6 +489,8 @@ cd /opt/graphite/conf
 sudo cp graphite.wsgi.example graphite.wsgi
 sudo bash -c 'export PYTHONPATH="/opt/graphite/lib/:/opt/graphite/webapp/"; gunicorn3 --bind=127.0.0.1:8080 graphite.wsgi:application'
 ```
+
+# Monitoring
 
 Point your browser to the host, where Graphite-web is running:
 
