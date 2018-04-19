@@ -2,14 +2,19 @@
 
 # Table of Contents
 
- * [Introduction](#introduction---what-are-we-talking-about)
+ * [Introduction](#introduction)
  * [Install ClickHouse](#install-clickhouse)
+   * [Configure ClickHouse](#configure-clickhouse)
+   * [Create ClickHouse tables](#create-clickhouse-tables)
  * [Install Graphouse](#install-graphouse)
+ * [Setup ClickHouse to report metrics into Graphouse](#setup-clickhouse-to-report-metrics-into-graphouse)
  * [Install Graphite-web](#install-graphite-web)
- * [Setup ClickHouse - Graphouse integration](#setup-clickhouse---graphouse-integration)
  * [Monitoring](#monitoring)
 
+# Introduction
 
+What are we talking about.
+[Graphouse](https://github.com/yandex/graphouse/) allows you to use [ClickHouse](https://clickhouse.yandex/) as a [Graphite](http://graphite.readthedocs.io/en/latest/overview.html) storage.
 
 # Install ClickHouse
 ClickHouse installation is explained in several sources, such as:
@@ -17,9 +22,15 @@ ClickHouse installation is explained in several sources, such as:
  * for [rpm-based systems](https://github.com/Altinity/clickhouse-rpm-install)
 
 
+## Configure ClickHouse
+
 Create rollup config file `/etc/clickhouse-server/conf.d/graphite_rollup.xml`.
 Settings for thinning data for Graphite.
 
+```bash
+sudo mkdir -p /etc/clickhouse-server/conf.d
+```
+`/etc/clickhouse-server/conf.d/graphite_rollup.xml` can be get [here](conf/graphite_rollup.xml?raw=true)
 ```xml
 <yandex>
 <graphite_rollup>
@@ -162,7 +173,14 @@ Settings for thinning data for Graphite.
 </yandex>
 ```
 
-Create tables
+## Create ClickHouse tables
+
+Restart ClickHouse, run `clickhouse-client` and create tables. SQL file is available [here](conf/create_tables.sql?raw=true)
+
+```bash
+sudo /etc/init.d/clickhouse-server restart
+clickhouse-client
+```
 
 ```sql
 CREATE DATABASE graphite;
@@ -207,29 +225,35 @@ More details are available in  [official doc](https://clickhouse.yandex/docs/en/
 # Install Graphouse
 
 ## Add Graphouse debian repo.
-In `/etc/apt/sources.list` (or in a separate file, like `/etc/apt/sources.list.d/graphouse.list`), add repository: `deb http://repo.yandex.ru/graphouse/xenial stable main`. On other versions of Ubuntu, replace xenial with your version.
+In `/etc/apt/sources.list` (or in a separate file, like `/etc/apt/sources.list.d/graphouse.list`), add repository: 
+`deb http://repo.yandex.ru/graphouse/xenial stable main`. On other versions of Ubuntu, replace `xenial` with your version.
+Such as:
+```bash
+sudo bash -c 'echo "deb http://repo.yandex.ru/graphouse/xenial stable main" >> /etc/apt/sources.list'
+sudo apt update
+```
 
 ## Install JDK8.
 
 ```bash
 sudo add-apt-repository ppa:webupd8team/java
 sudo apt update
-sudo apt install oracle-java8-installer
+sudo apt install -y oracle-java8-installer
 ```
 Package `oracle-java8-installer` contains a script to install Java.
 
 Set Java 8 as your default Java version.
 ```bash
-sudo apt install oracle-java8-set-default
+sudo apt install -y oracle-java8-set-default
 ```
 
 Let’s verify the installed version.
 ```bash
 java -version 
 
-java version "1.8.0_161"
-Java(TM) SE Runtime Environment (build 1.8.0_161-b12)
-Java HotSpot(TM) 64-Bit Server VM (build 25.161-b12, mixed mode)
+java version "1.8.0_171"
+Java(TM) SE Runtime Environment (build 1.8.0_171-b11)
+Java HotSpot(TM) 64-Bit Server VM (build 25.171-b11, mixed mode)
 ```
 
 ## Setup JAVA_HOME and JRE_HOME Variable
@@ -237,10 +261,10 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.161-b12, mixed mode)
 You must set `JAVA_HOME` and `JRE_HOME` environment variables, which is used by many Java applications to find Java libraries during runtime. 
 Set these variables in `/etc/environment` file:
 ```bash
-cat >> /etc/environment <<EOL
+sudo bash -c 'cat >> /etc/environment <<EOL
 JAVA_HOME=/usr/lib/jvm/java-8-oracle
 JRE_HOME=/usr/lib/jvm/java-8-oracle/jre
-EOL
+EOL'
 ```
 
 
@@ -248,7 +272,20 @@ EOL
 ```bash
 sudo apt install graphouse
 ```
-Set `graphouse.clickhouse.retention-config` property in graphouse config `/etc/graphouse/graphouse.properties` to `graphite_rollup` as defined in
+
+Edit properties in graphouse config `/etc/graphouse/graphouse.properties`
+
+Setup ClickHouse access. Make sure `graphouse.clickhouse.host` is correct. WARNING `//` comments are erroneous ini properties file!
+```ini
+graphouse.clickhouse.host=localhost
+graphouse.clickhouse.hosts=${graphouse.clickhouse.host}
+graphouse.clickhouse.port=8123
+graphouse.clickhouse.db=graphite
+graphouse.clickhouse.user=
+graphouse.clickhouse.password=
+```
+
+Set `graphouse.clickhouse.retention-config` to `graphite_rollup` as we earlier defined in
 ```xml
 <yandex>
   <graphite_rollup>
@@ -258,7 +295,7 @@ Set `graphouse.clickhouse.retention-config` property in graphouse config `/etc/g
 ```
 Set
 ```ini
-graphouse.clickhouse.retention-config = graphite_rollup
+graphouse.clickhouse.retention-config=graphite_rollup
 ```
 Config name for `graphouse.clickhouse.retention-config` is not a file path for `/etc/clickhouse-server/conf.d/graphite_rollup.xml`. You should use one of names from ClickHouse `system.graphite_retentions` table.
 
@@ -267,19 +304,77 @@ Start graphouse
 sudo /etc/init.d/graphouse start
 ```
 
+# Setup ClickHouse to report metrics into Graphouse
+
+This will provide ClickHouse's self-monitoring, to some extent - ClickHouse will report own metrics, which will be kept back in ClickHouse via Graphouse.
+
+Edit `/etc/clickhouse-server/config.xml` and append something like the following:
+```xml
+    <graphite>
+        <host>127.0.0.1</host>
+        <port>2003</port>
+        <timeout>0.1</timeout>
+        <interval>60</interval>
+        <root_path>one_min_cr_plain</root_path>
+
+        <metrics>true</metrics>
+        <events>true</events>
+        <asynchronous_metrics>true</asynchronous_metrics>
+    </graphite>
+    <graphite>
+        <host>127.0.0.1</host>
+        <port>2003</port>
+        <timeout>0.1</timeout>
+        <interval>1</interval>
+        <root_path>one_sec_cr_plain</root_path>
+
+        <metrics>true</metrics>
+        <events>true</events>
+        <asynchronous_metrics>false</asynchronous_metrics>
+    </graphite>
+```
+Settings description:
+
+* `host` – host where Graphite is running.
+* `port` – plain text receiver port (2003 is default).
+* `interval` – interval for sending data from ClickHouse, in seconds.
+* `timeout` – timeout for sending data, in seconds.
+* `root_path` – prefix used by Graphite.
+* `metrics` – should data from system_tables-system.metrics table be sent.
+* `events` – should data from system_tables-system.events table be sent.
+* `asynchronous_metrics` – should data from system_tables-system.asynchronous_metrics table be sent.
+
+Multiple `<graphite>` clauses can be configured for sending different data at different intervals.
+
+Restart ClickHouse
+```bash
+sudo /etc/init.d/clickhouse-server restart
+```
+
+Now ClickHouse would report metrics to Graphouse, and they will be stored back insode ClickHouse.
+So, we can check metrics data coming:
+
+```bash
+ clickhouse-client -q "select count(*) from graphite.data"
+ clickhouse-client -q "select count(*) from graphite.metrics"
+```
+
+As soon as we see metrics coming, we are ready to move to next step - metrics visualisation. This can be done via any Graphite-compatible interface.
+Let's start with Graphite-web.
+
 
 # Install Graphite-web
 
 ## Install graphite-web.
 
 You don't need carbon or whisper, Graphouse and ClickHouse completely replace them.
+Graphite has detailed [installation docs](http://graphite.readthedocs.io/en/latest/install-pip.html) and [configuration docs](http://graphite.readthedocs.io/en/latest/install.html#initial-configuration)
+
 
 ```bash
-sudo apt install -y python3-pip
-sudo apt install -y python3-dev libcairo2-dev libffi-dev build-essential
+sudo apt install -y python3-pip python3-dev libcairo2-dev libffi-dev build-essential
 export PYTHONPATH="/opt/graphite/lib/:/opt/graphite/webapp/"
 sudo pip3 install --no-binary=:all: https://github.com/graphite-project/graphite-web/tarball/master
-
 
 sudo apt install -y gunicorn3
 sudo apt install -y nginx
@@ -289,39 +384,115 @@ sudo touch /var/log/nginx/graphite.error.log
 sudo chmod 640 /var/log/nginx/graphite.*
 sudo chown www-data:www-data /var/log/nginx/graphite.*
 ```
-Setup host name in nginx config
+Create `/etc/nginx/sites-available/graphite` ngix config file with the following content:
+Write the following configuration in `/etc/nginx/sites-available/graphite` (availabe as a [file](conf/nginx_graphite?raw=true))
+```ini
+
+upstream graphite {
+    server 127.0.0.1:8080 fail_timeout=0;
+}
+
+server {
+    listen 80 default_server;
+
+    server_name HOSTNAME;
+
+    root /opt/graphite/webapp;
+
+    access_log /var/log/nginx/graphite.access.log;
+    error_log  /var/log/nginx/graphite.error.log;
+
+    location = /favicon.ico {
+        return 204;
+    }
+
+    # serve static content from the "content" directory
+    location /static {
+        alias /opt/graphite/webapp/content;
+        expires max;
+    }
+
+    location / {
+        try_files $uri @graphite;
+    }
+
+    location @graphite {
+        proxy_pass_header Server;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Scheme $scheme;
+        proxy_connect_timeout 10;
+        proxy_read_timeout 10;
+        proxy_pass http://graphite;
+    }
+}
+
+```
+
+Setup `server_name` host name in nginx config
 ```bash
 sudo vim /etc/nginx/sites-available/graphite
 ```
-Start Graphite-web
+
+Enable configuration for nginx:
 ```bash
-cd /opt/graphite/conf
-cp graphite.wsgi.example graphite.wsgi
-gunicorn3 --bind=127.0.0.1:8080 graphite.wsgi:application
+sudo ln -s /etc/nginx/sites-available/graphite /etc/nginx/sites-enabled
+sudo rm -f /etc/nginx/sites-enabled/default
 ```
 
-http://192.168.74.149/
+And reload nginx to use new configuration:
+```bash
+sudo service nginx reload
+```
 
+## Setup Graphite-web DB
+
+We need to create the database tables used by the graphite webapp.
+
+```bash
+sudo bash -c 'PYTHONPATH=/opt/graphite/webapp django-admin.py migrate --settings=graphite.settings --run-syncdb'
+```
+
+Ensure database created:
+
+```bash
+ ls -l /opt/graphite/storage/graphite.db
+-rw-r--r-- 1 root root 98304 Apr 19 22:49 /opt/graphite/storage/graphite.db
+```
+
+If your webapp is running as the ‘nobody’ user, you will need to fix the permissions like this:
+
+```bash
+sudo chown nobody:nobody /opt/graphite/storage/graphite.db
+```
 
 ## Setup connection to Graphouse
-
-
 
 Add graphouse plugin `/opt/graphouse/bin/graphouse.py `to your graphite webapp root dir. For example, if you dir is `/opt/graphite/webapp/graphite/` use:
 ```bash
 sudo ln -fs /opt/graphouse/bin/graphouse.py /opt/graphite/webapp/graphite/graphouse.py
-bash
-
-Configure storage finder in your `local_settings.py`
-```bash
-vim /opt/graphite/webapp/graphite/local_settings.py
 ```
+
+Configure storage finder in your `/opt/graphite/webapp/graphite/local_settings.py`
+Open `/opt/graphite/webapp/graphite/local_settings.py` in editor and add:
+
 ```python
 STORAGE_FINDERS = (
     'graphite.graphouse.GraphouseFinder',
 )
 ```
 
-Restart graphite-web
+Start Graphite-web
+```bash
+cd /opt/graphite/conf
+sudo cp graphite.wsgi.example graphite.wsgi
+sudo bash -c 'export PYTHONPATH="/opt/graphite/lib/:/opt/graphite/webapp/"; gunicorn3 --bind=127.0.0.1:8080 graphite.wsgi:application'
+```
 
+# Monitoring
+
+Point your browser to the host, where Graphite-web is running:
+
+![Graphite screenshot](images/graphite_web_graphouse.png?raw=true "Graphite screenshot")
 
