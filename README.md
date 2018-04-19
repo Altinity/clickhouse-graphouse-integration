@@ -351,6 +351,10 @@ So, we can check metrics data coming:
  clickhouse-client -q "select count(*) from graphite.metrics"
 ```
 
+As soon as we see metrics coming, we are ready to move to next step - metrics visualisation. This can be done via any Graphite-compatible interface.
+Let's start with Graphite-web.
+
+
 # Install Graphite-web
 
 ## Install graphite-web.
