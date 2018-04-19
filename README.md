@@ -167,9 +167,10 @@ sudo mkdir -p /etc/clickhouse-server/conf.d
 ```
 
 ## Create tables
-Run `clickhouse-client` and create tables. SQL file is available [here](conf/create_tables.sql?raw=true)
+Restart ClickHouse, run `clickhouse-client` and create tables. SQL file is available [here](conf/create_tables.sql?raw=true)
 
 ```bash
+sudo /etc/init.d/clickhouse-server restart
 clickhouse-client
 ```
 
