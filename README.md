@@ -23,7 +23,7 @@ Settings for thinning data for Graphite.
 ```bash
 sudo mkdir -p /etc/clickhouse-server/conf.d
 ```
-`graphite_rollup.xml` can be get [here](conf/graphite_rollup.xml?raw=true)
+`/etc/clickhouse-server/conf.d/graphite_rollup.xml` can be get [here](conf/graphite_rollup.xml?raw=true)
 ```xml
 <yandex>
 <graphite_rollup>
@@ -166,7 +166,12 @@ sudo mkdir -p /etc/clickhouse-server/conf.d
 </yandex>
 ```
 
-Create tables
+## Create tables
+Run `clickhouse-client` and create tables. SQL file is available [here](conf/create_tables.sql?raw=true)
+
+```bash
+clickhouse-client
+```
 
 ```sql
 CREATE DATABASE graphite;
