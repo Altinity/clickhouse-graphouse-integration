@@ -217,10 +217,11 @@ More details are available in  [official doc](https://clickhouse.yandex/docs/en/
 # Install Graphouse
 
 ## Add Graphouse debian repo.
-In `/etc/apt/sources.list` (or in a separate file, like `/etc/apt/sources.list.d/graphouse.list`), add repository: `deb http://repo.yandex.ru/graphouse/xenial stable main`. On other versions of Ubuntu, replace xenial with your version.
+In `/etc/apt/sources.list` (or in a separate file, like `/etc/apt/sources.list.d/graphouse.list`), add repository: 
+`deb http://repo.yandex.ru/graphouse/xenial stable main`. On other versions of Ubuntu, replace `xenial` with your version.
 Such as:
 ```bash
-sudo bash -c 'echo "deb http://repo.yandex.ru/clickhouse/deb/stable/ main/" >> /etc/apt/sources.list'
+sudo bash -c 'echo "deb http://repo.yandex.ru/graphouse/xenial stable main" >> /etc/apt/sources.list'
 ```
 
 ## Install JDK8.
@@ -399,5 +400,6 @@ gunicorn3 --bind=127.0.0.1:8080 graphite.wsgi:application
 ```
 
 Point your browser to the host, where Graphite-web is running:
+
 ![Graphite screenshot](images/graphite_web_graphouse.png?raw=true "Graphite screenshot")
 
