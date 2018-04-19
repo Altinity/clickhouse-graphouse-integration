@@ -218,6 +218,10 @@ More details are available in  [official doc](https://clickhouse.yandex/docs/en/
 
 ## Add Graphouse debian repo.
 In `/etc/apt/sources.list` (or in a separate file, like `/etc/apt/sources.list.d/graphouse.list`), add repository: `deb http://repo.yandex.ru/graphouse/xenial stable main`. On other versions of Ubuntu, replace xenial with your version.
+Such as:
+```bash
+sudo bash -c 'echo "deb http://repo.yandex.ru/clickhouse/deb/stable/ main/" >> /etc/apt/sources.list'
+```
 
 ## Install JDK8.
 
