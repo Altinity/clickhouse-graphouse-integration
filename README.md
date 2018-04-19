@@ -360,10 +360,11 @@ Let's start with Graphite-web.
 ## Install graphite-web.
 
 You don't need carbon or whisper, Graphouse and ClickHouse completely replace them.
+Graphite has detailed [installation docs](http://graphite.readthedocs.io/en/latest/install-pip.html) and [configuration docs](http://graphite.readthedocs.io/en/latest/install.html#initial-configuration)
+
 
 ```bash
-sudo apt install -y python3-pip
-sudo apt install -y python3-dev libcairo2-dev libffi-dev build-essential
+sudo apt install -y python3-pip python3-dev libcairo2-dev libffi-dev build-essential
 export PYTHONPATH="/opt/graphite/lib/:/opt/graphite/webapp/"
 sudo pip3 install --no-binary=:all: https://github.com/graphite-project/graphite-web/tarball/master
 
