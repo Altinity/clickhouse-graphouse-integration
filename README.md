@@ -222,6 +222,7 @@ In `/etc/apt/sources.list` (or in a separate file, like `/etc/apt/sources.list.d
 Such as:
 ```bash
 sudo bash -c 'echo "deb http://repo.yandex.ru/graphouse/xenial stable main" >> /etc/apt/sources.list'
+sudo apt update
 ```
 
 ## Install JDK8.
