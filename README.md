@@ -228,22 +228,22 @@ sudo bash -c 'echo "deb http://repo.yandex.ru/clickhouse/deb/stable/ main/" >> /
 ```bash
 sudo add-apt-repository ppa:webupd8team/java
 sudo apt update
-sudo apt install oracle-java8-installer
+sudo apt install -y oracle-java8-installer
 ```
 Package `oracle-java8-installer` contains a script to install Java.
 
 Set Java 8 as your default Java version.
 ```bash
-sudo apt install oracle-java8-set-default
+sudo apt install -y oracle-java8-set-default
 ```
 
 Let’s verify the installed version.
 ```bash
 java -version 
 
-java version "1.8.0_161"
-Java(TM) SE Runtime Environment (build 1.8.0_161-b12)
-Java HotSpot(TM) 64-Bit Server VM (build 25.161-b12, mixed mode)
+java version "1.8.0_171"
+Java(TM) SE Runtime Environment (build 1.8.0_171-b11)
+Java HotSpot(TM) 64-Bit Server VM (build 25.171-b11, mixed mode)
 ```
 
 ## Setup JAVA_HOME and JRE_HOME Variable
@@ -251,10 +251,10 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.161-b12, mixed mode)
 You must set `JAVA_HOME` and `JRE_HOME` environment variables, which is used by many Java applications to find Java libraries during runtime. 
 Set these variables in `/etc/environment` file:
 ```bash
-cat >> /etc/environment <<EOL
+sudo bash -c 'cat >> /etc/environment <<EOL
 JAVA_HOME=/usr/lib/jvm/java-8-oracle
 JRE_HOME=/usr/lib/jvm/java-8-oracle/jre
-EOL
+EOL'
 ```
 
 
@@ -262,7 +262,20 @@ EOL
 ```bash
 sudo apt install graphouse
 ```
-Set `graphouse.clickhouse.retention-config` property in graphouse config `/etc/graphouse/graphouse.properties` to `graphite_rollup` as defined in
+
+Edit properties in graphouse config `/etc/graphouse/graphouse.properties`
+
+Setup ClickHouse access. Make sure `graphouse.clickhouse.host` is correct. WARNING `//` comments are erroneous ini properties file!
+```ini
+graphouse.clickhouse.host=localhost
+graphouse.clickhouse.hosts=${graphouse.clickhouse.host}
+graphouse.clickhouse.port=8123
+graphouse.clickhouse.db=graphite
+graphouse.clickhouse.user=
+graphouse.clickhouse.password=
+```
+
+Set `graphouse.clickhouse.retention-config` to `graphite_rollup` as we earlier defined in
 ```xml
 <yandex>
   <graphite_rollup>
@@ -272,7 +285,7 @@ Set `graphouse.clickhouse.retention-config` property in graphouse config `/etc/g
 ```
 Set
 ```ini
-graphouse.clickhouse.retention-config = graphite_rollup
+graphouse.clickhouse.retention-config=graphite_rollup
 ```
 Config name for `graphouse.clickhouse.retention-config` is not a file path for `/etc/clickhouse-server/conf.d/graphite_rollup.xml`. You should use one of names from ClickHouse `system.graphite_retentions` table.
 
