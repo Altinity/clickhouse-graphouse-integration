@@ -399,4 +399,4 @@ gunicorn3 --bind=127.0.0.1:8080 graphite.wsgi:application
 ```
 
 Point your browser to the host, where Graphite-web is running:
-![Graphite screenshot](images/graphite_webi_graphouse.png?raw=true "Graphite screenshot"
+![Graphite screenshot](images/graphite_web_graphouse.png?raw=true "Graphite screenshot"
