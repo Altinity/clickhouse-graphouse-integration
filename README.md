@@ -464,7 +464,7 @@ Ensure database created:
 If your webapp is running as the ‘nobody’ user, you will need to fix the permissions like this:
 
 ```bash
-sudo chown nobody:nobody /opt/graphite/storage/graphite.db
+sudo chown nobody:nogroup /opt/graphite/storage/graphite.db
 ```
 
 ## Setup connection to Graphouse
