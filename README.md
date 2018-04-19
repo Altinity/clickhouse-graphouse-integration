@@ -377,8 +377,8 @@ sudo chmod 640 /var/log/nginx/graphite.*
 sudo chown www-data:www-data /var/log/nginx/graphite.*
 ```
 Create `/etc/nginx/sites-available/graphite` ngix config file with the following content:
-```ini
 Write the following configuration in /etc/nginx/sites-available/graphite:
+```ini
 
 upstream graphite {
     server 127.0.0.1:8080 fail_timeout=0;
@@ -427,6 +427,38 @@ Setup `server_name` host name in nginx config
 sudo vim /etc/nginx/sites-available/graphite
 ```
 
+Enable configuration for nginx:
+```bash
+sudo ln -s /etc/nginx/sites-available/graphite /etc/nginx/sites-enabled
+sudo rm -f /etc/nginx/sites-enabled/default
+```
+
+And reload nginx to use new configuration:
+```bash
+sudo service nginx reload
+```
+
+## Setup Graphite-web DB
+
+We need to create the database tables used by the graphite webapp.
+
+```bash
+sudo bash -c 'PYTHONPATH=/opt/graphite/webapp django-admin.py migrate --settings=graphite.settings --run-syncdb'
+```
+
+Ensure database created:
+
+```bash
+ ls -l /opt/graphite/storage/graphite.db
+-rw-r--r-- 1 root root 98304 Apr 19 22:49 /opt/graphite/storage/graphite.db
+```
+
+If your webapp is running as the ‘nobody’ user, you will need to fix the permissions like this:
+
+```bash
+sudo chown nobody:nobody /opt/graphite/storage/graphite.db
+```
+
 ## Setup connection to Graphouse
 
 Add graphouse plugin `/opt/graphouse/bin/graphouse.py `to your graphite webapp root dir. For example, if you dir is `/opt/graphite/webapp/graphite/` use:
@@ -446,8 +478,8 @@ STORAGE_FINDERS = (
 Start Graphite-web
 ```bash
 cd /opt/graphite/conf
-cp graphite.wsgi.example graphite.wsgi
-gunicorn3 --bind=127.0.0.1:8080 graphite.wsgi:application
+sudo cp graphite.wsgi.example graphite.wsgi
+sudo bash -c 'export PYTHONPATH="/opt/graphite/lib/:/opt/graphite/webapp/"; gunicorn3 --bind=127.0.0.1:8080 graphite.wsgi:application'
 ```
 
 Point your browser to the host, where Graphite-web is running:
