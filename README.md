@@ -4,7 +4,7 @@
 
  * [Introduction](#introduction)
  * [Install ClickHouse](#install-clickhouse)
-   * [Configure ClickHouse](#configure-clickhouse)
+ * [Configure ClickHouse](#configure-clickhouse)
    * [Create ClickHouse tables](#create-clickhouse-tables)
  * [Install Graphouse](#install-graphouse)
  * [Setup ClickHouse to report metrics into Graphouse](#setup-clickhouse-to-report-metrics-into-graphouse)
@@ -13,16 +13,26 @@
 
 # Introduction
 
-What are we talking about.
-[Graphouse](https://github.com/yandex/graphouse/) allows you to use [ClickHouse](https://clickhouse.yandex/) as a [Graphite](http://graphite.readthedocs.io/en/latest/overview.html) storage.
+Monitoring is an important part of operating any software in production. There are many monitoring tools available, and [Graphite](http://graphite.readthedocs.io/en/latest/overview.html) is a popular one.
+Graphite is positioned as an enterprise-scale monitoring tool that runs well on cheap hardware, and has gained significant popularity lately.
+Graphite consists of 3 software components:
+ * carbon - a daemon that listens for data
+ * whisper - a simple database library for storing data
+ * graphite webapp - A Django webapp that renders graphs on-demand using Cairo
+It turnd out, that under heavy load storage layer, which is `carbon` + `whisper`, may perform not as well at it could be, so some laternatives a looked for.
+And here it is. [Graphouse](https://github.com/yandex/graphouse/) allows you to use [ClickHouse](https://clickhouse.yandex/) as a [Graphite](http://graphite.readthedocs.io/en/latest/overview.html) storage.
 
 # Install ClickHouse
+
+Most likely you already have ClickHouse installed, in this case just move to [Configure ClickHouse](#configure-clickhouse) section.
 ClickHouse installation is explained in several sources, such as:
  * for [deb-based systems](https://clickhouse.yandex/docs/en/getting_started/#installing-from-packages-debianubuntu)
  * for [rpm-based systems](https://github.com/Altinity/clickhouse-rpm-install)
 
 
-## Configure ClickHouse
+# Configure ClickHouse
+
+Let's confibure ClickHouse to be a data storage for Graphouse.
 
 Create rollup config file `/etc/clickhouse-server/conf.d/graphite_rollup.xml`.
 Settings for thinning data for Graphite.
@@ -225,6 +235,7 @@ More details are available in  [official doc](https://clickhouse.yandex/docs/en/
 # Install Graphouse
 
 ## Add Graphouse debian repo.
+
 In `/etc/apt/sources.list` (or in a separate file, like `/etc/apt/sources.list.d/graphouse.list`), add repository: 
 `deb http://repo.yandex.ru/graphouse/xenial stable main`. On other versions of Ubuntu, replace `xenial` with your version.
 Such as:
@@ -269,6 +280,7 @@ EOL'
 
 
 ## Install Graphouse
+
 ```bash
 sudo apt install graphouse
 ```
@@ -307,6 +319,7 @@ sudo /etc/init.d/graphouse start
 # Setup ClickHouse to report metrics into Graphouse
 
 This will provide ClickHouse's self-monitoring, to some extent - ClickHouse will report own metrics, which will be kept back in ClickHouse via Graphouse.
+This part is optional, in case you'd like to monitor ClickHouse by other means, or do not monitor ClickHouse at all, just skip this section.
 
 Edit `/etc/clickhouse-server/config.xml` and append something like the following:
 ```xml
@@ -335,14 +348,14 @@ Edit `/etc/clickhouse-server/config.xml` and append something like the following
 ```
 Settings description:
 
-* `host` – host where Graphite is running.
-* `port` – plain text receiver port (2003 is default).
-* `interval` – interval for sending data from ClickHouse, in seconds.
-* `timeout` – timeout for sending data, in seconds.
-* `root_path` – prefix used by Graphite.
-* `metrics` – should data from system_tables-system.metrics table be sent.
-* `events` – should data from system_tables-system.events table be sent.
-* `asynchronous_metrics` – should data from system_tables-system.asynchronous_metrics table be sent.
+ * `host` – host where Graphite is running.
+ * `port` – plain text receiver port (2003 is default).
+ * `interval` – interval for sending data from ClickHouse, in seconds.
+ * `timeout` – timeout for sending data, in seconds.
+ * `root_path` – prefix used by Graphite.
+ * `metrics` – should data from system_tables-system.metrics table be sent.
+ * `events` – should data from system_tables-system.events table be sent.
+ * `asynchronous_metrics` – should data from system_tables-system.asynchronous_metrics table be sent.
 
 Multiple `<graphite>` clauses can be configured for sending different data at different intervals.
 
