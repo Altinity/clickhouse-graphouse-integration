@@ -20,7 +20,7 @@ Graphite consists of 3 software components:
  * whisper - a simple database library for storing data
  * graphite webapp - A webapp that renders graphs
 
-It turnd out, that under heavy load storage layer, which is `carbon` + `whisper`, may perform not as well at it could be, so some alternatives a looked for.
+It turnd out, that under heavy load storage layer, which is `carbon` + `whisper`, may perform not as well as it could be, so some alternatives a looked for.
 And here it is. [Graphouse](https://github.com/yandex/graphouse/) allows you to use [ClickHouse](https://clickhouse.yandex/) as a [Graphite](http://graphite.readthedocs.io/en/latest/overview.html) storage.
 
 # Install ClickHouse
