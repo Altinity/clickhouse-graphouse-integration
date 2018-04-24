@@ -18,7 +18,8 @@ Graphite is positioned as an enterprise-scale monitoring tool that runs well on 
 Graphite consists of 3 software components:
  * carbon - a daemon that listens for data
  * whisper - a simple database library for storing data
- * graphite webapp - A Django webapp that renders graphs on-demand using Cairo
+ * graphite webapp - A webapp that renders graphs
+
 It turnd out, that under heavy load storage layer, which is `carbon` + `whisper`, may perform not as well at it could be, so some laternatives a looked for.
 And here it is. [Graphouse](https://github.com/yandex/graphouse/) allows you to use [ClickHouse](https://clickhouse.yandex/) as a [Graphite](http://graphite.readthedocs.io/en/latest/overview.html) storage.
 
