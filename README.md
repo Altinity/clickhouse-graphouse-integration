@@ -20,7 +20,7 @@ Graphite consists of 3 software components:
  * whisper - a simple database library for storing data
  * graphite webapp - A webapp that renders graphs
 
-It turnd out, that under heavy load storage layer, which is `carbon` + `whisper`, may perform not as well at it could be, so some laternatives a looked for.
+It turnd out, that under heavy load storage layer, which is `carbon` + `whisper`, may perform not as well at it could be, so some alternatives a looked for.
 And here it is. [Graphouse](https://github.com/yandex/graphouse/) allows you to use [ClickHouse](https://clickhouse.yandex/) as a [Graphite](http://graphite.readthedocs.io/en/latest/overview.html) storage.
 
 # Install ClickHouse
@@ -365,8 +365,8 @@ Restart ClickHouse
 sudo /etc/init.d/clickhouse-server restart
 ```
 
-Now ClickHouse would report metrics to Graphouse, and they will be stored back insode ClickHouse.
-So, we can check metrics data coming:
+Now ClickHouse would report metrics to Graphouse, and they will be stored back inside ClickHouse.
+So, we can check metrics are coming:
 
 ```bash
  clickhouse-client -q "select count(*) from graphite.data"
@@ -381,7 +381,7 @@ Let's start with Graphite-web.
 
 ## Install graphite-web.
 
-You don't need carbon or whisper, Graphouse and ClickHouse completely replace them.
+You don't need `carbon` or `whisper` components of Graphite, Graphouse and ClickHouse completely replace them.
 Graphite has detailed [installation docs](http://graphite.readthedocs.io/en/latest/install-pip.html) and [configuration docs](http://graphite.readthedocs.io/en/latest/install.html#initial-configuration)
 
 
@@ -509,4 +509,6 @@ sudo bash -c 'export PYTHONPATH="/opt/graphite/lib/:/opt/graphite/webapp/"; guni
 Point your browser to the host, where Graphite-web is running:
 
 ![Graphite screenshot](images/graphite_web_graphouse.png?raw=true "Graphite screenshot")
+
+Now, we have monitoring tool availbale, having Graphouse + ClickHouse a a data storage layer.
 
