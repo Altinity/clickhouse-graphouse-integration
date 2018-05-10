@@ -3,6 +3,9 @@
 # Table of Contents
 
  * [Introduction](#introduction)
+   * [Graphite](#graphite)
+   * [Graphouse](#graphouse)
+   * [Solution architecture](#solution-architecture)
  * [Install ClickHouse](#install-clickhouse)
  * [Configure ClickHouse](#configure-clickhouse)
    * [Create ClickHouse tables](#create-clickhouse-tables)
@@ -14,14 +17,66 @@
 # Introduction
 
 Monitoring is an important part of operating any software in production. There are many monitoring tools available, and [Graphite](http://graphite.readthedocs.io/en/latest/overview.html) is a popular one.
+
+## Graphite
+
 Graphite is positioned as an enterprise-scale monitoring tool that runs well on cheap hardware, and has gained significant popularity lately.
 Graphite consists of 3 software components:
- * carbon - a daemon that listens for data
- * whisper - a simple database library for storing data
- * graphite webapp - A webapp that renders graphs
+ * `carbon` - a daemon that listens for data
+ * `whisper` - a database layer for storing data
+ * `graphite webapp` - a webapp that renders graphs
 
-It turnd out, that under heavy load storage layer, which is `carbon` + `whisper`, may perform not as well as it could be, so some alternatives a looked for.
-And here it is. [Graphouse](https://github.com/yandex/graphouse/) allows you to use [ClickHouse](https://clickhouse.yandex/) as a [Graphite](http://graphite.readthedocs.io/en/latest/overview.html) storage.
+All is going well with Graphite, until incoming data stream gets big. What exactly **big** means is really task-specific, but it turnd out, that having particular threshold steeped over, storage layer, which is `carbon` + `whisper`, may perform not as well as it could be, presenting the following issues:
+ * Lack of replication possibilitites
+ * Lack of data consistency
+ * High disk IO utilization.
+ * Disk space utilization
+
+Let's walk over these issues in more details
+
+### Lack of replication possibilities
+
+In case you'd like to introduce failover capabilities to monitoring system, you'd need to have metrics data replicated (stored in more than one place).
+That's introduce some kind of an issue with **Graphite**, since we do not know better way than to just duplicate data stream to each instace of `carbon + whisper` running on different servers.
+However, the main inconveince comes when one of those replicas fails, and gets a gap in data. The simplest way to fill the gap would be with `rsync` and requires additional attention/automation from admins.
+
+### Lack of data consistency
+
+Another not-so-peasant issue is that sometimes, dataset on those replicas are not equal. Not much, typically just several percents, but nevertheless, this brings some feeling of uncertainty to the picture.
+
+### High disk IO utilization
+
+Having incoming data stream overstepped some threshold, `carbon + whisper` consumes disk IO havily. Under some circumstances there is even 100% disk IO utilization.
+
+### Disk space utilization
+
+Sometimes, you need to write only several metrics during retention period (this is especially the case, when you write not only hardware/software metrics, but business metrics also) but `.wsp` file is created by data storage layer for the whole retention period.
+In case of multiple situations of this sort, disk space utilization can be not that good at all.
+
+
+Of course, each of this issues is not a huge problem per se, but the more data you have, the more you'd like to have these issues to be dealt with. And some alternatives are looked for.
+And here it is.
+
+## Graphouse
+
+[Graphouse](https://github.com/yandex/graphouse/) allows you to use [ClickHouse](https://clickhouse.yandex/) as a [Graphite](http://graphite.readthedocs.io/en/latest/overview.html) storage.
+
+What we'd like to achieve with such a shift:
+ * Get replication capabilities and data consistency out-of-the-box - provided by DBMS itself
+ * Lower disk IO utilization
+ * Lower disk space utilization
+
+## Solution architecture
+
+As described earlier, **Graphite** consists of 3 software components
+ * `carbon` - a daemon that listens for data
+ * `whisper` - a database layer for storing data
+ * `graphite webapp` - a webapp that renders graphs
+
+**Graphouse** substitutes `carbon` and `whisper` components, presenting it's own data accumulation daemon and **ClickHouse** as a data storage layer. 
+Ultimately, you can replace `graphite webapp` with other graphing tool as well, having no **Graphite** components left.
+
+So let's walk over the whole **Graphouse** and **ClickHouse** installation and setup procedures.
 
 # Install ClickHouse
 
