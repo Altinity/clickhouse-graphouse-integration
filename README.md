@@ -26,11 +26,11 @@ Graphite consists of 3 software components:
  * `whisper` - a database layer for storing data
  * `graphite webapp` - a webapp that renders graphs
 
-All is going well with Graphite, until incoming data stream gets big. What exactly **big** means is really task-specific, but it turnd out, that having particular threshold steeped over, storage layer, which is `carbon` + `whisper`, may perform not as well as it could be, presenting the following issues:
+All is going well with Graphite, until incoming data stream gets big. What exactly **big** means is really task-specific, but it turned out, that having particular threshold stepped over, storage layer, which is `carbon` + `whisper`, may perform not as well as it could be, presenting the following issues:
  * Lack of replication possibilitites
  * Lack of data consistency
  * High disk IO utilization.
- * Disk space utilization
+ * High disk space utilization
 
 Let's walk over these issues in more details
 
@@ -38,19 +38,20 @@ Let's walk over these issues in more details
 
 In case you'd like to introduce failover capabilities to monitoring system, you'd need to have metrics data replicated (stored in more than one place).
 That's introduce some kind of an issue with **Graphite**, since we do not know better way than to just duplicate data stream to each instace of `carbon + whisper` running on different servers.
-However, the main inconveince comes when one of those replicas fails, and gets a gap in data. The simplest way to fill the gap would be with `rsync` and requires additional attention/automation from admins.
+However, the main inconvenience comes when one of those replicas fails, and gets a gap in data. The simplest way to fill the gap would be with `rsync` and requires additional attention/automation from admins.
 
 ### Lack of data consistency
 
-Another not-so-peasant issue is that sometimes, dataset on those replicas are not equal. Not much, typically just several percents, but nevertheless, this brings some feeling of uncertainty to the picture.
+Another not-so-peasant issue is that sometimes, datasets on those replicas are not equal. Not much, typically just several percents, but nevertheless, this brings some feeling of uncertainty to the picture. 
+Not necessarily `carbon` + `whisper` are in charge of this issue, most likely the setup in general - with duplicated data streams - but it would be nice to have solution out-of-the-box, and not invent it.
 
 ### High disk IO utilization
 
-Having incoming data stream overstepped some threshold, `carbon + whisper` consumes disk IO havily. Under some circumstances there is even 100% disk IO utilization.
+Having incoming data stream overstepped some threshold, `carbon + whisper` consumes disk IO heavily. Under some circumstances there is even 100% disk IO utilization.
 
-### Disk space utilization
+### High disk space utilization
 
-Sometimes, you need to write only several metrics during retention period (this is especially the case, when you write not only hardware/software metrics, but business metrics also) but `.wsp` file is created by data storage layer for the whole retention period.
+Sometimes, you need to write only several metrics during retention period (this is especially the case, when you write not only hardware/software metrics, but business metrics as well) but `.wsp` file is created by data storage layer for the whole retention period.
 In case of multiple situations of this sort, disk space utilization can be not that good at all.
 
 
