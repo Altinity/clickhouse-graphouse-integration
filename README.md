@@ -10,9 +10,12 @@
  * [Configure ClickHouse](#configure-clickhouse)
    * [Create ClickHouse tables](#create-clickhouse-tables)
  * [Install Graphouse](#install-graphouse)
+ * [Configure Graphouse](#configure-graphouse)
+ * [Intermediate results](#intermediate-results)
  * [Setup ClickHouse to report metrics into Graphouse](#setup-clickhouse-to-report-metrics-into-graphouse)
  * [Install Graphite-web](#install-graphite-web)
  * [Monitoring](#monitoring)
+ * [Consclusions](#conclusions)
 
 # Introduction
 
