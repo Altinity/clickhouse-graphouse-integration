@@ -389,7 +389,13 @@ sudo /etc/init.d/graphouse start
 
 # Intermediate results
 
-At this point we
+At this point we have **Graphouse** up and running and ready to accept metrics from entities to be monitored.
+Next steps would be to:
+ * Setup metrics delivery from monitored entities
+ * Setup graph-capable GUI
+
+Generally speaking, you can choose any compatible GUI, but from the sake of simplicity we'll use Graphite's webapp.
+Let's go on and setup ClickHouse to write its own metrics into Graphouse
 
 # Setup ClickHouse to report metrics into Graphouse
 
@@ -447,8 +453,7 @@ So, we can check metrics are coming:
  clickhouse-client -q "select count(*) from graphite.metrics"
 ```
 
-As soon as we see metrics coming, we are ready to move to next step - metrics visualisation. This can be done via any Graphite-compatible interface.
-Let's start with Graphite-web.
+As soon as we see metrics coming, we are ready to move to next step - metrics visualisation. This can be done via any Graphite-compatible interface and we'll use Graphite's webapp, just as an example
 
 
 # Install Graphite-web
@@ -584,5 +589,13 @@ Point your browser to the host, where Graphite-web is running:
 
 ![Graphite screenshot](images/graphite_web_graphouse.png?raw=true "Graphite screenshot")
 
-Now, we have monitoring tool availbale, having Graphouse + ClickHouse a a data storage layer.
+Now, we have monitoring tool availbale.
+
+# Conclusions
+
+At this moment, we have Graphouse + ClickHouse as a data storage layer installed and setup. From here we can move multiple ways, for example:
+ * Setup ClickHouse replication cluster, or
+ * Setup different graphing tool (like, say Grafana) in case you'd prefer,
+
+but this are topics for another post.
 
