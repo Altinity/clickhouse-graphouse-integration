@@ -37,7 +37,7 @@ Let's walk over these issues in more details
 ### Lack of replication possibilities
 
 In case you'd like to introduce failover capabilities to monitoring system, you'd need to have metrics data replicated (stored in more than one place).
-That's introduce some kind of an issue with **Graphite**, since we do not know better way than to just duplicate data stream to each instace of `carbon + whisper` running on different servers.
+That's introduce some kind of an issue with **Graphite**, since we do not know better way than to just duplicate data stream to each instance of `carbon + whisper` running on different servers.
 However, the main inconvenience comes when one of those replicas fails, and gets a gap in data. The simplest way to fill the gap would be with `rsync` and requires additional attention/automation from admins.
 
 ### Lack of data consistency
@@ -77,7 +77,18 @@ As described earlier, **Graphite** consists of 3 software components
 **Graphouse** substitutes `carbon` and `whisper` components, presenting it's own data accumulation daemon and **ClickHouse** as a data storage layer. 
 Ultimately, you can replace `graphite webapp` with other graphing tool as well, having no **Graphite** components left.
 
-So let's walk over the whole **Graphouse** and **ClickHouse** installation and setup procedures.
+So let's walk over the whole **Graphouse** and **ClickHouse** installation and setup procedures. We need to:
+ * Install ClickHouse (it would be used as a data storage layer)
+ * Install Graphouse (it would be used as a metrics processing layer)
+ * Setup Graphouse - ClickHouse integration
+
+As an additional option, we'd like to:
+ * Setup ClickHouse to report its own metrics into Graphouse - to be the first to be monitored by Graphouse.
+
+Also we'd most likely need to have some king of GUI to take a look at metrics, so we'd
+ * Setup Graphite-web as a graphing tool
+
+Let's go
 
 # Install ClickHouse
 
@@ -89,7 +100,7 @@ ClickHouse installation is explained in several sources, such as:
 
 # Configure ClickHouse
 
-Let's confibure ClickHouse to be a data storage for Graphouse.
+Let's configure ClickHouse to be a data storage for Graphouse.
 
 Create rollup config file `/etc/clickhouse-server/conf.d/graphite_rollup.xml`.
 Settings for thinning data for Graphite.
@@ -335,16 +346,19 @@ JRE_HOME=/usr/lib/jvm/java-8-oracle/jre
 EOL'
 ```
 
-
-## Install Graphouse
+## And install Graphouse
 
 ```bash
 sudo apt install graphouse
 ```
 
+# Configure Graphouse
+
+Let's configure Graphouse to store metrics in ClickHouse
+
 Edit properties in graphouse config `/etc/graphouse/graphouse.properties`
 
-Setup ClickHouse access. Make sure `graphouse.clickhouse.host` is correct. WARNING `//` comments are erroneous ini properties file!
+Setup ClickHouse access. Make sure `graphouse.clickhouse.host` is correct. **WARNING** `//` comments are erroneous ini properties file!
 ```ini
 graphouse.clickhouse.host=localhost
 graphouse.clickhouse.hosts=${graphouse.clickhouse.host}
@@ -372,6 +386,10 @@ Start graphouse
 ```bash
 sudo /etc/init.d/graphouse start
 ```
+
+# Intermediate results
+
+At this point we
 
 # Setup ClickHouse to report metrics into Graphouse
 
