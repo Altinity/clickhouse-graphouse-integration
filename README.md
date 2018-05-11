@@ -397,7 +397,7 @@ Next steps would be to:
  * Setup metrics delivery from monitored entities
  * Setup graph-capable GUI
 
-Generally speaking, you can choose any compatible GUI, but from the sake of simplicity we'll use Graphite's webapp.
+Generally speaking, you can choose any compatible GUI, but for the sake of simplicity we'll use Graphite's webapp.
 Let's go on and setup ClickHouse to write its own metrics into Graphouse
 
 # Setup ClickHouse to report metrics into Graphouse
